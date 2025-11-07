@@ -12,7 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -25,32 +25,49 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword())
         );
 
         User user = (User) authentication.getPrincipal();
         String token = jwtTokenProvider.generateToken(user);
         String TOKEN_TYPE = "Bearer";
+
+        LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
+                .build();
+
         return LoginResponse.builder()
                 .accessToken(token)
                 .tokenType(TOKEN_TYPE)
-                .role(user.getRole().getRoleName())
+                .user(userInfo)
                 .build();
     }
 
+    @Transactional
     public RegisterResponse register(RegisterRequest request) {
         log.info("Attempting to register new user with email: {}", request.getEmail());
-        
+
         User user = userService.createUser(request);
-        
-        log.info("User registered successfully with username: {}", user.getUsername());
+
+        log.info("User registered successfully with email: {}", user.getEmail());
         return RegisterResponse.builder()
+                .id(user.getId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
+                .phone(user.getPhone())
+                .role(user.getRole().name())
+                .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    public User getCurrentUser(String email) {
+        return (User) userService.loadUserByUsername(email);
     }
 
 }

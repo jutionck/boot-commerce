@@ -11,13 +11,21 @@ import lombok.*;
 public class RegisterRequest {
     @NotBlank
     private String firstName;
+
+    @NotBlank
     private String lastName;
+
     @NotBlank
     @Email
     private String email;
-    private String phoneNumber;
+
+    private String phone;
+
     @NotBlank
     private String password;
+
     @NotBlank
     private String confirmPassword;
+
+    private String role; // Optional: CUSTOMER, SELLER (defaults to CUSTOMER)
 }

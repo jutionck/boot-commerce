@@ -6,18 +6,17 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RegisterResponse {
+public class CustomerResponse {
     private UUID id;
+    private String email;
     private String firstName;
     private String lastName;
-    private String email;
     private String phone;
-    private String role;
+    private String avatar;
     private LocalDateTime createdAt;
 }
