@@ -4,6 +4,7 @@ import com.github.jutionck.dto.request.RegisterRequest;
 import com.github.jutionck.entity.User;
 import com.github.jutionck.enums.UserRole;
 import com.github.jutionck.exceptions.ResourceDuplicateException;
+import com.github.jutionck.exceptions.ValidationException;
 import com.github.jutionck.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,42 +26,48 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(() ->
-                new UsernameNotFoundException("Username or password is incorrect"));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email).orElseThrow(() ->
+                new UsernameNotFoundException("Email or password is incorrect"));
     }
-    
+
+    public User findById(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
     @Transactional
     public User createUser(RegisterRequest request) {
         log.info("Creating new user with email: {}", request.getEmail());
-        
+
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("Password and confirm password do not match");
+            throw new ValidationException("Password and confirm password do not match");
         }
-        
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ResourceDuplicateException("Email already exists");
         }
-        
-        String username = request.getEmail().split("@")[0];
-        int counter = 1;
-        String originalUsername = username;
-        
-        while (userRepository.existsByUsername(username)) {
-            username = originalUsername + counter++;
+
+        // Parse role from request, default to CUSTOMER
+        UserRole userRole = UserRole.CUSTOMER;
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            try {
+                userRole = UserRole.valueOf(request.getRole().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException("Invalid role: " + request.getRole());
+            }
         }
-        
+
         User user = User.builder()
-                .email(username)
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .role(UserRole.USER)
+                .phone(request.getPhone())
+                .role(userRole)
                 .enabled(true)
                 .build();
-        
+
         return userRepository.save(user);
     }
 }
