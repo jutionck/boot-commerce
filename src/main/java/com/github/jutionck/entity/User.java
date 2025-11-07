@@ -18,21 +18,24 @@ import java.util.List;
 @Builder
 public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, unique = true)
-    private String username;
-
-    private String password;
-    
-    private String firstName;
-    
-    private String lastName;
-    
-    @Column(unique = true)
     private String email;
-    
-    private String phoneNumber;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role;
+
+    private String phone;
+
+    private String avatar;
 
     @Column(nullable = false)
     private boolean enabled = true;
@@ -40,6 +43,11 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.getRoleName()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email; // Use email as username for Spring Security
     }
 
     @Override
