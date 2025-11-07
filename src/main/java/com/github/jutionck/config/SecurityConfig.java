@@ -32,8 +32,24 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        // Swagger/OpenAPI
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+
+                        // Auth endpoints - public registration and login
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+
+                        // Products - public browsing
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/brands").permitAll()
+
+                        // Vouchers - public validation for checkout
+                        .requestMatchers(HttpMethod.GET, "/api/v1/vouchers/validate/**").permitAll()
+
+                        // Referrals - public validation for registration
+                        .requestMatchers(HttpMethod.GET, "/api/v1/referrals/validate/**").permitAll()
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
