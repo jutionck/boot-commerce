@@ -3,8 +3,9 @@ package com.github.jutionck.enums;
 import lombok.Getter;
 
 public enum UserRole {
-    USER("USER"),
-    ADMIN("ADMIN");
+    CUSTOMER("Customer"),
+    SELLER("Seller"),
+    ADMIN("Admin");
 
     @Getter
     private final String displayName;
